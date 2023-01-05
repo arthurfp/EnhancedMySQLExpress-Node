@@ -8,7 +8,7 @@ const alias = joi.string().alphanum().required();
 // id validation rules
 const id = joi.number().integer().min(1).required();
 
-exports.add_cate_schema = {
+exports.addCateSchema = {
   body: {
     name,
     alias,
@@ -17,14 +17,14 @@ exports.add_cate_schema = {
 
 // id is on the url, obtained through req.params
 // /:id
-exports.cate_id_schema = {
+exports.cateIdSchema = {
   params: {
     id,
   },
 };
 
 // Update the validation rules of the article classification according to the id
-exports.update_cate_schema = {
+exports.updateCateSchema = {
   body: {
     id,
     name,

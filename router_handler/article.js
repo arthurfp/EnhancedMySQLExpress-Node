@@ -1,12 +1,12 @@
-const db = require('../db/index');
 const path = require('path');
+const db = require('../db/index');
 
 // Get the article list data of the the current user (current user is the author of the article)
 exports.getArticleList = (req, res) => {
   const sql = 'select * from ev_articles where author_id = ? and is_delete = 0';
   db.query(sql, req.user.id, (err, result) => {
     if (err) return res.cc(err);
-    res.send({
+    return res.send({
       status: 0,
       message: 'Success',
       data: result,
@@ -19,7 +19,7 @@ exports.getArticleById = (req, res) => {
   const sql = 'select * from ev_articles where id = ? and is_delete = 0';
   db.query(sql, req.params.id, (err, result) => {
     if (err) return res.cc(err);
-    res.send({
+    return res.send({
       status: 0,
       message: 'Success',
       data: result,
@@ -34,10 +34,10 @@ exports.deleteArticleById = (req, res) => {
   db.query(sqlSelect, req.params.id, (err, result) => {
     if (err) return res.cc(err);
     if (result.length === 0) return res.cc('The article does not exist');
-    db.query(sql, req.params.id, (err, result) => {
-      if (err) return res.cc(err);
-      if (result.affectedRows !== 1) return res.cc('Delete failed, please try again');
-      res.cc('Successfully deleted', 0);
+    return db.query(sql, req.params.id, (_err, _result) => {
+      if (_err) return res.cc(_err);
+      if (_result.affectedRows !== 1) return res.cc('Delete failed, please try again');
+      return res.cc('Successfully deleted', 0);
     });
   });
 };
@@ -53,10 +53,10 @@ exports.editArticleById = (req, res) => {
     pub_date: new Date(),
     cover_img: path.join('/uploads', req.file.fieldname),
   };
-  db.query(sql, [articleInfo, req.body.id], (err, result) => {
+  return db.query(sql, [articleInfo, req.body.id], (err, result) => {
     if (err) return res.cc(err);
     if (result.affectedRows !== 1) return res.cc('Update failed');
-    res.cc('Successfully updated', 0);
+    return res.cc('Successfully updated', 0);
   });
 };
 
@@ -73,9 +73,9 @@ exports.addArticle = (req, res) => {
     cover_img: path.join('/uploads', req.file.filename),
   };
   const sql = 'insert into ev_articles set ?';
-  db.query(sql, articleInfo, (err, result) => {
+  return db.query(sql, articleInfo, (err, result) => {
     if (err) return res.cc(err);
     if (result.affectedRows !== 1) return res.cc('Failed to publish article');
-    res.cc('Article published successfully', 0);
+    return res.cc('Article published successfully', 0);
   });
 };

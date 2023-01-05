@@ -1,15 +1,14 @@
-const db = require('../db/index');
 const bcrypt = require('bcryptjs');
+const db = require('../db/index');
 
 // Get user information
 exports.getUserInfo = (req, res) => {
-  const sql =
-    'select id, username, nickname, email, user_pic from ev_users where id = ?';
+  const sql = 'select id, username, nickname, email, user_pic from ev_users where id = ?';
   db.query(sql, req.user.id, (err, result) => {
     if (err) return res.cc(err);
     if (result.length !== 1) return res.cc('Failed to get user information');
 
-    res.send({
+    return res.send({
       status: 0,
       message: 'Success',
       data: result[0],
@@ -23,7 +22,7 @@ exports.updateUserInfo = (req, res) => {
   db.query(sql, [req.body, req.user.id], (err, result) => {
     if (err) return res.cc(err);
     if (result.affectedRows !== 1) return res.cc('Failed to update user information');
-    res.cc('User information has been updated', 0);
+    return res.cc('User information has been updated', 0);
   });
 };
 
@@ -37,19 +36,19 @@ exports.updatePassword = (req, res) => {
 
     const compareResult = bcrypt.compareSync(
       req.body.oldPwd,
-      result[0].password
+      result[0].password,
     );
     if (!compareResult) return res.cc('Wrong Password!');
     // Update password
     const updateSql = 'update ev_users set password = ? where id = ?';
-    db.query(
+    return db.query(
       updateSql,
       [bcrypt.hashSync(req.body.newPwd), req.user.id],
-      (err, result) => {
-        if (err) res.cc(err);
-        if (result.affectedRows !== 1) return res.cc('Update failed, please try again');
-        res.cc('Successfully updated password', 0);
-      }
+      (_err, _result) => {
+        if (_err) res.cc(_err);
+        if (_result.affectedRows !== 1) return res.cc('Update failed, please try again');
+        return res.cc('Successfully updated password', 0);
+      },
     );
   });
 };
@@ -60,6 +59,6 @@ exports.updateAvatar = (req, res) => {
   db.query(sql, [req.body.avatar, req.user.id], (err, result) => {
     if (err) return res.cc(err);
     if (result.affectedRows !== 1) return res.cc('Update failed, please try again');
-    res.cc('Successfully updated avatar', 0);
+    return res.cc('Successfully updated avatar', 0);
   });
 };

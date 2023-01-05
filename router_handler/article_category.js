@@ -1,9 +1,8 @@
 const db = require('../db/index');
 
 // Get the article list that has not been deleted (soft deleted)
-exports.getArticleCategory = (req, res) => {
-  const sql =
-    'select * from ev_article_cate where is_delete = 0 order by id asc';
+exports.getArticleCategory = (_req, res) => {
+  const sql = 'select * from ev_article_cate where is_delete = 0 order by id asc';
   db.query(sql, (err, result) => {
     if (err) res.cc(err);
     res.send({
@@ -18,32 +17,31 @@ exports.getArticleCategory = (req, res) => {
 exports.addArticleCategory = (req, res) => {
   const sqlSelect = 'select * from ev_article_cate where name = ? or alias = ?';
   db.query(sqlSelect, [req.body.name, req.body.alias], (err, result) => {
-    if (err) return res.cc(err);
+    if (err) return result.cc(err);
     if (result.length === 0) {
       const sql = 'insert into ev_article_cate set ?';
       db.query(
-        sql, {
+        sql,
+        {
           name: req.body.name,
-          alias: req.body.alias
+          alias: req.body.alias,
         },
-        (err, result) => {
-          if (err) return res.cc(err);
-          if (result.affectedRows !== 1) return res.cc('Failed to add, please try again');
-          res.cc('Add data successfully', 0);
-        }
+        (_err, _result) => {
+          if (_err) return _result.cc(_err);
+          if (_result.affectedRows !== 1) return _result.cc('Failed to add, please try again');
+          return _result.cc('Add data successfully', 0);
+        },
       );
     } else {
       if (
-        result.length === 1 &&
-        result[0].name === req.body.name &&
-        result[0].alias === req.body.alias
-      )
-        return res.cc('Category name and alias already exists');
-      if (result.length === 1 && result[0].name === req.body.name)
-        return res.cc('Category name already exists');
-      if (result.length === 1 && result[0].alias === req.body.alias)
-        return res.cc('Category alias already exists');
+        result.length === 1
+        && result[0].name === req.body.name
+        && result[0].alias === req.body.alias
+      ) return result.cc('Category name and alias already exists');
+      if (result.length === 1 && result[0].name === req.body.name) return result.cc('Category name already exists');
+      if (result.length === 1 && result[0].alias === req.body.alias) return result.cc('Category alias already exists');
     }
+    return res;
   });
 };
 
@@ -54,7 +52,7 @@ exports.deleteCategoryById = (req, res) => {
   db.query(sql, req.params.id, (err, result) => {
     if (err) return res.cc(err);
     if (result.affectedRows !== 1) return res.cc('Delete failed, please try again');
-    res.cc('Successfully deleted', 0);
+    return res.cc('Successfully deleted', 0);
   });
 };
 
@@ -64,7 +62,7 @@ exports.getCategoryById = (req, res) => {
   db.query(sql, req.params.id, (err, result) => {
     if (err) return res.cc(err);
     if (result.length !== 1) return res.cc('Failed to get article categories, please try again');
-    res.cc({
+    return res.cc({
       status: 0,
       message: 'Get article classification success',
       data: result[0],
@@ -75,8 +73,7 @@ exports.getCategoryById = (req, res) => {
 // Update the article classification list according to the id
 exports.updateCategoryById = (req, res) => {
   // Check first: whether the name and alias to be updated by the user already exist
-  const sqlSelect =
-    'select * from ev_article_cate where id <> ? and (name = ? or alias = ?)';
+  const sqlSelect = 'select * from ev_article_cate where id <> ? and (name = ? or alias = ?)';
   db.query(
     sqlSelect,
     [req.body.id, req.body.name, req.body.alias],
@@ -84,36 +81,33 @@ exports.updateCategoryById = (req, res) => {
       if (err) return res.cc(err);
       if (result.length === 0) {
         // Can be updated, now checks if the id exists
-        const sqlSelectId =
-          'select * from ev_article_cate where id = ? and is_delete = 0';
-        db.query(sqlSelectId, req.body.id, (err, result) => {
-          if (err) return res.cc(err);
-          if (result.length !== 1) return res.cc('Article category does not exist');
+        const sqlSelectId = 'select * from ev_article_cate where id = ? and is_delete = 0';
+        db.query(sqlSelectId, req.body.id, (_err, _result) => {
+          if (_err) return res.cc(_err);
+          if (_result.length !== 1) return res.cc('Article category does not exist');
+          return res;
         });
         // Category already exists
         const sqlUpdate = 'update ev_article_cate set ? where id = ?';
-        db.query(sqlUpdate, [req.body, req.body.id], (err, result) => {
-          if (err) return res.cc(err);
-          if (result.affectedRows !== 1) return res.cc('Update failed, please try again');
-          res.cc('Successfully updated', 0);
+        db.query(sqlUpdate, [req.body, req.body.id], (_err, _result) => {
+          if (_err) return res.cc(_err);
+          if (_result.affectedRows !== 1) return res.cc('Update failed, please try again');
+          return res.cc('Successfully updated', 0);
         });
       } else {
         // Can NOT be updated
         if (
-          result.length === 1 &&
-          result[0].name === req.body.name &&
-          result[0].alias === req.body.alias
-        )
-          return res.cc('Category name and alias already exists');
-        if (result.length === 1 && result[0].name === req.body.name)
-          return res.cc('Category name already exists');
-        if (result.length === 1 && result[0].alias === req.body.alias)
-          return res.cc('Category alias already exists');
+          result.length === 1
+          && result[0].name === req.body.name
+          && result[0].alias === req.body.alias
+        ) return res.cc('Category name and alias already exists');
+        if (result.length === 1 && result[0].name === req.body.name) return res.cc('Category name already exists');
+        if (result.length === 1 && result[0].alias === req.body.alias) return res.cc('Category alias already exists');
       }
-      res.send({
+      return res.send({
         status: 0,
         message: 'Update failed',
       });
-    }
+    },
   );
 };
